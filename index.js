@@ -2,12 +2,29 @@
 // Ses données sont dans le dossier du plugin, que NeoBase sauvegarde (synchro cloud et sauvegardes) ; à la première ouverture elle reprend ce que tu avais dans NeoBase.
 // Elle demande l'accès complet pour utiliser les outils d'interface de NeoBase. NeoBase ne l'ouvre que si elle est signée.
 const HTML = "<div class=\"ptBar\">\n        <span id=\"ptName\" class=\"ptName\"></span>\n        <button class=\"btn px\" id=\"ptNewBtn\">Nouveau</button><button class=\"btn px\" id=\"ptOpenBtn\">Ouvrir…</button><button class=\"btn main px\" id=\"ptSaveBtn\" title=\"Ctrl+S\">Enregistrer…</button><span class=\"ptSep\"></span>\n        <button class=\"btn px\" id=\"ptUndo\" title=\"Annuler (Ctrl+Z)\">↶</button><button class=\"btn px\" id=\"ptRedo\" title=\"Rétablir (Ctrl+Y)\">↷</button><span class=\"ptSep\"></span>\n        <button class=\"btn px\" id=\"ptZoomOut\" title=\"Zoom arrière (Ctrl+molette)\">−</button><span id=\"ptZoomVal\" class=\"hint\"></span><button class=\"btn px\" id=\"ptZoomIn\" title=\"Zoom avant\">+</button><button class=\"btn px\" id=\"ptZoomFit\">AJUSTER</button><span class=\"ptSep\"></span>\n        <button class=\"btn px\" id=\"ptRotL\" title=\"Tourner à gauche\">⟲</button><button class=\"btn px\" id=\"ptRotR\" title=\"Tourner à droite\">⟳</button><button class=\"btn px\" id=\"ptFlipH\" title=\"Miroir horizontal\">⇋</button><button class=\"btn px\" id=\"ptFlipV\" title=\"Miroir vertical\">⇵</button>\n        <button class=\"btn px\" id=\"ptResize\">Redimensionner</button><button class=\"btn px\" id=\"ptCrop\" title=\"Garder seulement la zone sélectionnée\">Recadrer</button>\n        <select class=\"f\" id=\"ptFilters\"></select>\n      </div>\n      <div class=\"ptMain\">\n        <div id=\"ptTools\"></div>\n        <div id=\"ptStage\"><div id=\"ptWrap\"><canvas id=\"ptCanvas\"></canvas><canvas id=\"ptOver\"></canvas></div></div>\n        <div class=\"ptSide\">\n          <span class=\"label\">Couleur</span><input type=\"color\" id=\"ptColor\"><div id=\"ptPal\"></div>\n          <span class=\"label\">Taille</span><input type=\"range\" id=\"ptSizeIn\" min=\"1\" max=\"80\"><span id=\"ptSizeVal\" class=\"hint\"></span>\n          <label class=\"check\"><input type=\"checkbox\" id=\"ptFillIn\"> Formes pleines</label>\n          <label class=\"check\"><input type=\"checkbox\" id=\"ptPixel\"> Mode pixel art</label>\n          <div class=\"hint\" id=\"ptInfo\"></div>\n          <div class=\"hint\">Glisse une image ici pour l'ouvrir. Ctrl+molette : zoom. Suppr : effacer la sélection. Lettres B E L R O F I T S : outils.</div>\n        </div>\n      </div>";
+/*CSS-MOVED*/ const CSS = `.ptSep{width:10px}
+.ptName{color:#fff;font-size:15px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:8px}
+#ptTools{width:130px;flex:none;display:flex;flex-direction:column;gap:2px;padding:10px;border-right:3px solid var(--line);overflow-y:auto}
+.ptTool{height:36px;font-size:14px;margin:3px}
+.ptTool.on{--c:var(--magenta);--fill:rgba(var(--mgr),.25)}
+#ptStage{flex:1;overflow:auto;display:grid;place-items:center;padding:20px;background:repeating-conic-gradient(#1a1030 0 25%,#140a26 0 50%) 0 0/24px 24px}
+#ptWrap{position:relative;box-shadow:0 0 0 3px var(--line2),0 10px 40px rgba(0,0,0,.5);background:repeating-conic-gradient(#ccc 0 25%,#fff 0 50%) 0 0/16px 16px}
+#ptWrap canvas{position:absolute;left:0;top:0}
+#ptWrap.crisp canvas{image-rendering:pixelated}
+#ptOver{touch-action:none}
+.ptSide{width:220px;flex:none;display:flex;flex-direction:column;gap:10px;padding:14px;border-left:3px solid var(--line);overflow-y:auto}
+#ptColor{width:100%;height:40px;border:0;padding:0;background:none;cursor:var(--cp,pointer)}
+#ptPal{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+#ptPal .sw{width:auto;aspect-ratio:1;height:auto}
+#ptSizeIn{accent-color:var(--magenta)}
+`;  // le style de ce plugin (il utilise les variables du thème de NeoBase)
 export default async function (ctx) {
   const view = ctx.view;
   if (!ctx.host) { view.textContent = "Ce plugin doit être approuvé par NeoBase pour s'ouvrir."; return; }
   const host = ctx.host, { el, toast, sfx, ask, newTab, pixIcon, PIX, WX } = host;
   const nbConfirm = host.confirm;  // la boîte de confirmation de NeoBase, à la place de celle de Windows
   const folder = ctx.folder, legacy = ctx.legacy || {};
+  ctx.host.addStyle(CSS);
   view.innerHTML = HTML;
   const $ = id => id === "paintApp" ? view : (view.querySelector('#' + id) || document.getElementById(id));  // les identifiants de ta vue d'abord, puis ceux de la page (fenêtres, menus)
   const doc = async n => { try { return await folder.read(n); } catch { return null; } };

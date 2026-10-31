@@ -1,9 +1,0 @@
-{
-  "pluginId": "neobase.paint",
-  "repo": "NDesumeur/neobase-plugin-paint",
-  "version": "1.0.0",
-  "sha256": "39acc38491d34d68bd975dbef920838477b063662c8c887799fc0d6878cc6761",
-  "approvedAt": "2026-10-31T17:07:58.724Z",
-  "neobase": ">=4.0.0",
-  "signature": "Nu5S1mi/LqywXOd4ryuIx8VLZIdQx4tqfsYlrGw/EcY2xuv2GfIitiX+VJeFpC+NYPTVUGxQWKN713+zvMmMDg=="
-}
