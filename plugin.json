@@ -1,0 +1,19 @@
+{
+  "id": "neobase.paint",
+  "name": "Paint",
+  "version": "1.0.0",
+  "author": "NDesumeur",
+  "description": "Dessine : pinceaux, formes, remplissage, sélection, annulation, enregistrement en image.",
+  "icon": "icon.png",
+  "entry": "index.js",
+  "view": "paint",
+  "neobase": ">=4.0.0",
+  "type": "app",
+  "category": "Outils",
+  "mobile": false,
+  "system": false,
+  "dependencies": {},
+  "permissions": [
+    "full"
+  ]
+}
