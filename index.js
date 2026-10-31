@@ -187,5 +187,6 @@ document.addEventListener('keydown', e => {
   else if (!e.ctrlKey && !e.altKey) { const t = PT_TOOLS.find(t => t[2].toLowerCase() === k); if (t) { pt.tool = t[0]; ptSide(); } }
 });  // (non indenté : les textes sur plusieurs lignes restent exactement les tiens)
   // ---- fin ----
+  window.ptOpenPath = ptOpenPath;  // ce que NeoBase (Fichiers, Visionneuse, recherche dans la page) peut demander à ce plugin
   ctx.onOpen(() => { ptOpen(); });
 }
