@@ -1,6 +1,6 @@
 // Paint : ton appli d'origine (HTML et code inchangés), livrée en plugin.
 // Ses données sont dans le dossier du plugin, que NeoBase sauvegarde (synchro cloud et sauvegardes) ; à la première ouverture elle reprend ce que tu avais dans NeoBase.
-// Elle demande l'accès complet pour utiliser les outils d'interface de NeoBase. NeoBase ne l'ouvre que si elle est signée.
+// Elle tourne dans le bac à sable de NeoBase, avec ses outils d'interface (ctx.host) et seulement les autorisations de son plugin.json.
 const HTML = "<div class=\"ptBar\">\n        <span id=\"ptName\" class=\"ptName\"></span>\n        <button class=\"btn px\" id=\"ptNewBtn\">Nouveau</button><button class=\"btn px\" id=\"ptOpenBtn\">Ouvrir…</button><button class=\"btn main px\" id=\"ptSaveBtn\" title=\"Ctrl+S\">Enregistrer…</button><span class=\"ptSep\"></span>\n        <button class=\"btn px\" id=\"ptUndo\" title=\"Annuler (Ctrl+Z)\">↶</button><button class=\"btn px\" id=\"ptRedo\" title=\"Rétablir (Ctrl+Y)\">↷</button><span class=\"ptSep\"></span>\n        <button class=\"btn px\" id=\"ptZoomOut\" title=\"Zoom arrière (Ctrl+molette)\">−</button><span id=\"ptZoomVal\" class=\"hint\"></span><button class=\"btn px\" id=\"ptZoomIn\" title=\"Zoom avant\">+</button><button class=\"btn px\" id=\"ptZoomFit\">AJUSTER</button><span class=\"ptSep\"></span>\n        <button class=\"btn px\" id=\"ptRotL\" title=\"Tourner à gauche\">⟲</button><button class=\"btn px\" id=\"ptRotR\" title=\"Tourner à droite\">⟳</button><button class=\"btn px\" id=\"ptFlipH\" title=\"Miroir horizontal\">⇋</button><button class=\"btn px\" id=\"ptFlipV\" title=\"Miroir vertical\">⇵</button>\n        <button class=\"btn px\" id=\"ptResize\">Redimensionner</button><button class=\"btn px\" id=\"ptCrop\" title=\"Garder seulement la zone sélectionnée\">Recadrer</button>\n        <select class=\"f\" id=\"ptFilters\"></select>\n      </div>\n      <div class=\"ptMain\">\n        <div id=\"ptTools\"></div>\n        <div id=\"ptStage\"><div id=\"ptWrap\"><canvas id=\"ptCanvas\"></canvas><canvas id=\"ptOver\"></canvas></div></div>\n        <div class=\"ptSide\">\n          <span class=\"label\">Couleur</span><input type=\"color\" id=\"ptColor\"><div id=\"ptPal\"></div>\n          <span class=\"label\">Taille</span><input type=\"range\" id=\"ptSizeIn\" min=\"1\" max=\"80\"><span id=\"ptSizeVal\" class=\"hint\"></span>\n          <label class=\"check\"><input type=\"checkbox\" id=\"ptFillIn\"> Formes pleines</label>\n          <label class=\"check\"><input type=\"checkbox\" id=\"ptPixel\"> Mode pixel art</label>\n          <div class=\"hint\" id=\"ptInfo\"></div>\n          <div class=\"hint\">Glisse une image ici pour l'ouvrir. Ctrl+molette : zoom. Suppr : effacer la sélection. Lettres B E L R O F I T S : outils.</div>\n        </div>\n      </div>";
 /*CSS-MOVED*/ const CSS = `.ptSep{width:10px}
 .ptName{color:#fff;font-size:15px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:8px}
@@ -29,7 +29,6 @@ export default async function (ctx) {
   const $ = id => id === "paintApp" ? view : (view.querySelector('#' + id) || document.getElementById(id));  // les identifiants de ta vue d'abord, puis ceux de la page (fenêtres, menus)
   const doc = async n => { try { return await folder.read(n); } catch { return null; } };
   const __icon = () => ctx.icon;  // l'icône de ce plugin
-  const fileUrl = ctx.fileUrl;  // les fichiers de ton PC, par le serveur local de NeoBase
   const money = s => { const v = parseFloat(String(s).replace(/[\s  €]/g, '').replace(',', '.')); return isFinite(v) ? Math.round(v * 100) / 100 : NaN; };  // restés dans le cœur : Stats et d'autres applis s'en servent
   // ---- ton code d'origine ----
 /* ---------- Paint app: one canvas (the picture) + one overlay (shape previews, selection); undo keeps whole snapshots ---------- */
@@ -61,7 +60,7 @@ function ptLoad(src, name, file = '') {
   img.onerror = () => toast("Impossible d'ouvrir cette image", true);
   img.src = src;
 }
-const ptOpenPath = p => { ptLoad(fileUrl(p), p.split(/[\\/]/).pop(), p); newTab('neodyme:paint'); };
+const ptOpenPath = p => neo.fileData(p).then(u => { ptLoad(u, p.split(/[\\/]/).pop(), p); newTab('neodyme:paint'); }, e => toast(e.message, true));  // l'image, lue par NeoBase
 async function ptSave() {
   const flat = document.createElement('canvas'); flat.width = ptC.width; flat.height = ptC.height;
   const f = flat.getContext('2d'); f.fillStyle = '#ffffff'; f.fillRect(0, 0, flat.width, flat.height); f.drawImage(ptC, 0, 0);  // JPEG has no transparency: white behind
@@ -192,7 +191,7 @@ $('ptFilters').replaceChildren(new Option('Filtres…', ''), ...Object.keys(PT_F
 $('ptFilters').onchange = e => { if (e.target.value) ptFilter(PT_FILTERS[e.target.value]); e.target.value = ''; };
 $('ptStage').onwheel = e => { if (e.ctrlKey) { e.preventDefault(); ptZoom(pt.zoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15)); } };
 $('paintApp').ondragover = e => e.preventDefault();
-$('paintApp').ondrop = e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && /^image\//.test(f.type)) ptOpenPath(neo.pathOf(f)); };
+$('paintApp').ondrop = e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && /^image\//.test(f.type)) neo.pathOf(f).then(ptOpenPath); };
 document.addEventListener('keydown', e => {
   if (!view.classList.contains('on') || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || document.querySelector('#askModal.on')) return;
   const k = e.key.toLowerCase();
@@ -204,6 +203,6 @@ document.addEventListener('keydown', e => {
   else if (!e.ctrlKey && !e.altKey) { const t = PT_TOOLS.find(t => t[2].toLowerCase() === k); if (t) { pt.tool = t[0]; ptSide(); } }
 });  // (non indenté : les textes sur plusieurs lignes restent exactement les tiens)
   // ---- fin ----
-  window.ptOpenPath = ptOpenPath;  // ce que NeoBase (Fichiers, Visionneuse, recherche dans la page) peut demander à ce plugin
+  ctx.onFiles(files => files[0] && ptOpenPath(files[0]));  // « ouvrir avec » : Fichiers, Visionneuse
   ctx.onOpen(() => { ptOpen(); });
 }
