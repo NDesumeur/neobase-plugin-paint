@@ -1,6 +1,6 @@
 {
-  "pluginId": "neobase.paint",
-  "repo": "NDesumeur/neobase-plugin-paint",
+  "pluginId": "neodex.paint",
+  "repo": "NDesumeur/neodex-plugin-paint",
   "version": "1.0.2",
   "sha256": "a61b810b77be8d814a6f31700f86c8b89ae54a9fd0dd9aad469688c425ea365b",
   "approvedAt": "2026-11-01T00:16:26.467Z",

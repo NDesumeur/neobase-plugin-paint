@@ -1,6 +1,6 @@
 // Paint : ton appli d'origine (HTML et code inchangés), livrée en plugin.
-// Ses données sont dans le dossier du plugin, que NeoBase sauvegarde (synchro cloud et sauvegardes) ; à la première ouverture elle reprend ce que tu avais dans NeoBase.
-// Elle tourne dans le bac à sable de NeoBase, avec ses outils d'interface (ctx.host) et seulement les autorisations de son plugin.json.
+// Ses données sont dans le dossier du plugin, que NeoDex sauvegarde (synchro cloud et sauvegardes) ; à la première ouverture elle reprend ce que tu avais dans NeoDex.
+// Elle tourne dans le bac à sable de NeoDex, avec ses outils d'interface (ctx.host) et seulement les autorisations de son plugin.json.
 const HTML = "<div class=\"ptBar\">\n        <span id=\"ptName\" class=\"ptName\"></span>\n        <button class=\"btn px\" id=\"ptNewBtn\">Nouveau</button><button class=\"btn px\" id=\"ptOpenBtn\">Ouvrir…</button><button class=\"btn main px\" id=\"ptSaveBtn\" title=\"Ctrl+S\">Enregistrer…</button><span class=\"ptSep\"></span>\n        <button class=\"btn px\" id=\"ptUndo\" title=\"Annuler (Ctrl+Z)\">↶</button><button class=\"btn px\" id=\"ptRedo\" title=\"Rétablir (Ctrl+Y)\">↷</button><span class=\"ptSep\"></span>\n        <button class=\"btn px\" id=\"ptZoomOut\" title=\"Zoom arrière (Ctrl+molette)\">−</button><span id=\"ptZoomVal\" class=\"hint\"></span><button class=\"btn px\" id=\"ptZoomIn\" title=\"Zoom avant\">+</button><button class=\"btn px\" id=\"ptZoomFit\">AJUSTER</button><span class=\"ptSep\"></span>\n        <button class=\"btn px\" id=\"ptRotL\" title=\"Tourner à gauche\">⟲</button><button class=\"btn px\" id=\"ptRotR\" title=\"Tourner à droite\">⟳</button><button class=\"btn px\" id=\"ptFlipH\" title=\"Miroir horizontal\">⇋</button><button class=\"btn px\" id=\"ptFlipV\" title=\"Miroir vertical\">⇵</button>\n        <button class=\"btn px\" id=\"ptResize\">Redimensionner</button><button class=\"btn px\" id=\"ptCrop\" title=\"Garder seulement la zone sélectionnée\">Recadrer</button>\n        <select class=\"f\" id=\"ptFilters\"></select>\n      </div>\n      <div class=\"ptMain\">\n        <div id=\"ptTools\"></div>\n        <div id=\"ptStage\"><div id=\"ptWrap\"><canvas id=\"ptCanvas\"></canvas><canvas id=\"ptOver\"></canvas></div></div>\n        <div class=\"ptSide\">\n          <span class=\"label\">Couleur</span><input type=\"color\" id=\"ptColor\"><div id=\"ptPal\"></div>\n          <span class=\"label\">Taille</span><input type=\"range\" id=\"ptSizeIn\" min=\"1\" max=\"80\"><span id=\"ptSizeVal\" class=\"hint\"></span>\n          <label class=\"check\"><input type=\"checkbox\" id=\"ptFillIn\"> Formes pleines</label>\n          <label class=\"check\"><input type=\"checkbox\" id=\"ptPixel\"> Mode pixel art</label>\n          <div class=\"hint\" id=\"ptInfo\"></div>\n          <div class=\"hint\">Glisse une image ici pour l'ouvrir. Ctrl+molette : zoom. Suppr : effacer la sélection. Lettres B E L R O F I T S : outils.</div>\n        </div>\n      </div>";
 /*CSS-MOVED*/ const CSS = `.ptSep{width:10px}
 .ptName{color:#fff;font-size:15px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:8px}
@@ -17,12 +17,12 @@ const HTML = "<div class=\"ptBar\">\n        <span id=\"ptName\" class=\"ptName\
 #ptPal{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 #ptPal .sw{width:auto;aspect-ratio:1;height:auto}
 #ptSizeIn{accent-color:var(--magenta)}
-`;  // le style de ce plugin (il utilise les variables du thème de NeoBase)
+`;  // le style de ce plugin (il utilise les variables du thème de NeoDex)
 export default async function (ctx) {
   const view = ctx.view;
-  if (!ctx.host) { view.textContent = "Ce plugin doit être approuvé par NeoBase pour s'ouvrir."; return; }
+  if (!ctx.host) { view.textContent = "Ce plugin doit être approuvé par NeoDex pour s'ouvrir."; return; }
   const host = ctx.host, { el, toast, sfx, ask, newTab, pixIcon, PIX, WX } = host;
-  const nbConfirm = host.confirm;  // la boîte de confirmation de NeoBase, à la place de celle de Windows
+  const nbConfirm = host.confirm;  // la boîte de confirmation de NeoDex, à la place de celle de Windows
   const folder = ctx.folder, legacy = ctx.legacy || {};
   ctx.host.addStyle(CSS);
   view.innerHTML = HTML;
@@ -60,7 +60,7 @@ function ptLoad(src, name, file = '') {
   img.onerror = () => toast("Impossible d'ouvrir cette image", true);
   img.src = src;
 }
-const ptOpenPath = p => neo.fileData(p).then(u => { ptLoad(u, p.split(/[\\/]/).pop(), p); newTab('neodyme:paint'); }, e => toast(e.message, true));  // l'image, lue par NeoBase
+const ptOpenPath = p => neo.fileData(p).then(u => { ptLoad(u, p.split(/[\\/]/).pop(), p); newTab('neodex:paint'); }, e => toast(e.message, true));  // l'image, lue par NeoDex
 async function ptSave() {
   const flat = document.createElement('canvas'); flat.width = ptC.width; flat.height = ptC.height;
   const f = flat.getContext('2d'); f.fillStyle = '#ffffff'; f.fillRect(0, 0, flat.width, flat.height); f.drawImage(ptC, 0, 0);  // JPEG has no transparency: white behind
